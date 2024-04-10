@@ -10,7 +10,7 @@ import (
 type (
 	Config struct {
 		Loglevel string `mapstructure:"loglevel"`
-		BtcNode  string `mapstructure:"btc_node"`
+		BtcdNode string `mapstructure:"btcd_node"`
 	}
 )
 

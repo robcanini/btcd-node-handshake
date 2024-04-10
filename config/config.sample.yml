@@ -1,2 +1,2 @@
 loglevel: "info"
-btc_node: "127.0.0.1:8333"
+btcd_node: "127.0.0.1:8333"
