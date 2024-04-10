@@ -22,9 +22,8 @@ ifeq ($(DIFF), 1)
 endif
 
 EXE_PATH=btcd-node-handshake
-PKG=github.com/A-Roberto-Company/btcd-node-handshake
 
-LDFLAGS="-X $(PKG).GitVersion=$(GIT_VERSION) -X $(PKG).gitCommit=$(GIT_HASH) -X $(PKG).gitTreeState=$(GIT_TREESTATE) -X $(PKG).buildDate=$(BUILD_DATE)"
+LDFLAGS="-X main.GitVersion=$(GIT_VERSION) -X main.GitCommit=$(GIT_HASH) -X main.GitTreeState=$(GIT_TREESTATE) -X main.BuildDate=$(BUILD_DATE)"
 
 .PHONY: all build clean
 
