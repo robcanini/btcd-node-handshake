@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"net"
 
 	"github.com/robcanini/btcd-node-handshake/internal/config"
+	"github.com/robcanini/btcd-node-handshake/internal/handshake"
+	"github.com/robcanini/btcd-node-handshake/internal/node"
 
 	"github.com/rs/zerolog"
 )
@@ -14,7 +16,7 @@ import (
 var GitVersion string
 
 func main() {
-	_, ctxCancel := context.WithCancel(context.Background())
+	ctx, ctxCancel := context.WithCancel(context.Background())
 	defer ctxCancel()
 
 	log := createLogger()
@@ -57,15 +59,24 @@ func main() {
 	}
 	zerolog.SetGlobalLevel(level)
 
-	// bitcoin node connection
-	conn, err := net.Dial("tcp", cfg.BtcNode)
+	// btcd node connection
+	btcd := node.NewBtcdTcpClient(log, ctx, cfg.Btcd)
+	dispose, err := btcd.Connect()
 	if err != nil {
-		fmt.Println("error while connecting to the bitcoin node:", err)
 		return
 	}
-	defer conn.Close()
+	defer dispose()
 
-	// handshake here
-
-	fmt.Println("handshake accomplished")
+	// handshake
+	hProgr := handshake.Run(log, btcd)
+	for event := range hProgr {
+		log.Info().Str("code", string(event)).Msg("h_event received")
+		if event == handshake.Error {
+			err = errors.New("handshake failed")
+			return
+		}
+		if event == handshake.Done {
+			log.Info().Msg("handshake successfully completed")
+		}
+	}
 }

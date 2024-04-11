@@ -1,55 +1,45 @@
 package message
 
 import (
+	"io"
 	"net"
 	"time"
 )
 
 type NetAddress struct {
-	// Last time the address was seen.  This is, unfortunately, encoded as a
-	// uint32 on the wire and therefore is limited to 2106.  This field is
-	// not present in the bitcoin version message (MsgVersion) nor was it
-	// added until protocol version >= NetAddressTimeVersion.
 	Timestamp time.Time
-
-	// Bitfield which identifies the services supported by the address.
-	Services uint64
-
-	// IP address of the peer.
-	IP net.IP
-
-	// Port the peer is using.  This is encoded in big endian on the wire
-	// which differs from most everything else.
-	Port uint16
+	Services  uint64
+	IP        net.IP
+	Port      uint16
 }
 
 type MsgVersion struct {
-	// Version of the protocol the node is using.
 	ProtocolVersion int32
+	Services        uint64
+	Timestamp       time.Time
+	AddrYou         NetAddress
+	AddrMe          NetAddress
+	Nonce           uint64
+	UserAgent       string
+	LastBlock       int32
+	DisableRelayTx  bool
+}
 
-	// Bitfield which identifies the enabled services.
-	Services uint64
+func NewMsgVersion() *MsgVersion {
+	return &MsgVersion{
+		ProtocolVersion: 0,
+		Services:        0,
+		Timestamp:       time.Time{},
+		AddrYou:         NetAddress{},
+		AddrMe:          NetAddress{},
+		Nonce:           0,
+		UserAgent:       "",
+		LastBlock:       0,
+		DisableRelayTx:  false,
+	}
+}
 
-	// Time the message was generated.  This is encoded as an int64 on the wire.
-	Timestamp time.Time
+func (msg *MsgVersion) Encode(w io.Writer) error {
 
-	// Address of the remote peer.
-	AddrYou NetAddress
-
-	// Address of the local peer.
-	AddrMe NetAddress
-
-	// Unique value associated with message that is used to detect self
-	// connections.
-	Nonce uint64
-
-	// The user agent that generated message.  This is a encoded as a varString
-	// on the wire.  This has a max length of MaxUserAgentLen.
-	UserAgent string
-
-	// Last block seen by the generator of the version message.
-	LastBlock int32
-
-	// Don't announce transactions to peer.
-	DisableRelayTx bool
+	return nil
 }

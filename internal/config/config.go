@@ -10,7 +10,14 @@ import (
 type (
 	Config struct {
 		Loglevel string `mapstructure:"loglevel"`
-		BtcdNode string `mapstructure:"btcd_node"`
+		Btcd     Btcd   `mapstructure:"btcd"`
+	}
+	Btcd struct {
+		Node string   `mapstructure:"node"`
+		Spec BtcdSpec `mapstructure:"spec"`
+	}
+	BtcdSpec struct {
+		ProtocolVersion string `mapstructure:"p_version"`
 	}
 )
 

@@ -1,12 +1,14 @@
 package node
 
 type Node interface {
-	// Connect to the node returning the conn handler
-	Connect() (*Connection, error)
+	Connect() (func(), error)
+	IsConnected() bool
+	SendVersion() error
+	VerAck() error
 }
 
-type Connection interface {
-	Dispose() error
-	Read([]byte) error
-	Write([]byte) error
+type connection interface {
+	dispose()
+	read([]byte) error
+	write([]byte) error
 }

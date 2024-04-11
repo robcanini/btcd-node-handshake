@@ -1,2 +1,5 @@
-loglevel: "info"
-btcd_node: "127.0.0.1:8333"
+loglevel: "debug"
+btcd:
+  node: "127.0.0.1:8333"
+  spec:
+    p_version: ""
