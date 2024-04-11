@@ -26,7 +26,6 @@ func (conn *tcpConnection) dispose() {
 		return
 	}
 	conn.log.Debug().Msg("tcp connection closed")
-	return
 }
 
 func (conn *tcpConnection) read(bytes []byte) (err error) {
