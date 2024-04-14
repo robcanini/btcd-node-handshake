@@ -10,3 +10,6 @@ btcd:
     services: 1
 handshake:
   timeout: 30s
+cache:
+  file:
+    store: .cache
