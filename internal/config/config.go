@@ -3,23 +3,37 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
 type (
 	Config struct {
-		Loglevel string `mapstructure:"loglevel"`
-		Btcd     Btcd   `mapstructure:"btcd"`
+		Loglevel  string    `mapstructure:"loglevel"`
+		Node      Node      `mapstructure:"node"`
+		Handshake Handshake `mapstructure:"handshake"`
+	}
+	Node struct {
+		Host string `mapstructure:"host"`
+		Port uint16 `mapstructure:"port"`
+		Btcd Btcd   `mapstructure:"btcd"`
 	}
 	Btcd struct {
-		Node string   `mapstructure:"node"`
-		Spec BtcdSpec `mapstructure:"spec"`
+		Agent           string `mapstructure:"agent"`
+		ProtocolVersion uint32 `mapstructure:"p_version"`
+		RelayTx         bool   `mapstructure:"relay_tx"`
+		Services        uint32 `mapstructure:"services"`
+		Network         string `mapstructure:"network"`
 	}
-	BtcdSpec struct {
-		ProtocolVersion string `mapstructure:"p_version"`
+	Handshake struct {
+		Timeout time.Duration `mapstructure:"timeout"`
 	}
 )
+
+func (node *Node) Address() string {
+	return fmt.Sprintf("%s:%d", node.Host, node.Port)
+}
 
 func Load(file string) (c Config, err error) {
 	viper.SetConfigFile(file)

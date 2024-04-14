@@ -7,6 +7,8 @@ type Node interface {
 	VerAck() error
 }
 
+type Network uint32
+
 type connection interface {
 	dispose()
 	read([]byte) error

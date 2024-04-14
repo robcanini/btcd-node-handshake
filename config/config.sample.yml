@@ -1,5 +1,12 @@
 loglevel: "debug"
 btcd:
-  node: "127.0.0.1:8333"
+  node_host: "127.0.0.1"
+  node_port: 8333
   spec:
-    p_version: ""
+    network: "MainNet"
+    agent: "/btcwire:0.5.0/"
+    p_version: "70016"
+    relay_tx: false
+    services: 1
+handshake:
+  timeout: 30s
