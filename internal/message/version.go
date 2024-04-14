@@ -2,8 +2,6 @@ package message
 
 import (
 	"bytes"
-	"crypto/rand"
-	"crypto/sha256"
 	"encoding/binary"
 	"net"
 	"time"
@@ -62,7 +60,7 @@ func NewMsgVersion(
 
 func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	// todo: isolate each attr to serializable comp behaviour
-	
+
 	sourceAddr := NetAddress{
 		IP:   net.ParseIP("127.0.0.1").To4(),
 		Port: 8443,
@@ -89,28 +87,12 @@ func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	message := new(bytes.Buffer)
 
 	// header
-	_ = binary.Write(message, binary.LittleEndian, msg.Network)
-	command := []byte(VersionCommand)
-	command = append(command, make([]byte, 12-len(command))...)
-	message.Write(command)
-	_ = binary.Write(message, binary.LittleEndian, uint32(payload.Len()))
-	message.Write(computeChecksum(payload.Bytes())[0:4])
+	header := newMsgHeader(msg.Network, VersionCmd, uint32(payload.Len()), computeChecksum(payload.Bytes()))
+	message.Write(header.toBytes())
 
 	// payload
 	message.Write(payload.Bytes())
 
 	buf = message.Bytes()
 	return
-}
-
-func computeChecksum(payload []byte) []byte {
-	first := sha256.Sum256(payload)
-	second := sha256.Sum256(first[:])
-	return second[:]
-}
-
-func randUint64() uint64 {
-	buf := make([]byte, 8)
-	rand.Read(buf) // no need to check error
-	return binary.LittleEndian.Uint64(buf)
 }
