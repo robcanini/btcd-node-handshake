@@ -1,4 +1,5 @@
 loglevel: debug
+host: local.com
 node:
   host: example.com
   port: 8080

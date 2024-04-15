@@ -11,6 +11,7 @@ import (
 type (
 	Config struct {
 		Loglevel  string    `mapstructure:"loglevel"`
+		Host      string    `mapstructure:"host"`
 		Node      Node      `mapstructure:"node"`
 		Handshake Handshake `mapstructure:"handshake"`
 	}

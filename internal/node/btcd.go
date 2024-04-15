@@ -16,9 +16,10 @@ import (
 )
 
 type Btcd struct {
-	log zerolog.Logger
-	ctx context.Context
-	cfg config.Node
+	log  zerolog.Logger
+	ctx  context.Context
+	cfg  config.Node
+	host string
 
 	conn   connection
 	stopCh chan HandshakeCode
@@ -27,11 +28,12 @@ type Btcd struct {
 	paramsMux sync.Mutex
 }
 
-func NewBtcdTcpClient(log zerolog.Logger, ctx context.Context, config config.Node) *Btcd {
+func NewBtcdTcpClient(log zerolog.Logger, ctx context.Context, config config.Node, host string) *Btcd {
 	return &Btcd{
-		log: log,
-		ctx: ctx,
-		cfg: config,
+		log:  log,
+		ctx:  ctx,
+		cfg:  config,
+		host: host,
 	}
 }
 
@@ -139,7 +141,7 @@ func (b *Btcd) close() {
 func (b *Btcd) StartHandshake(stopCh chan HandshakeCode) (err error) {
 	btcdCfg := b.cfg.Btcd
 	sourceAddr := message.NetAddress{
-		IP:   net.ParseIP("127.0.0.1").To4(),
+		IP:   net.ParseIP(b.host).To4(),
 		Port: 8443,
 	}
 	targetAddr := message.NetAddress{

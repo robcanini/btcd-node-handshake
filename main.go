@@ -60,7 +60,7 @@ func main() {
 	zerolog.SetGlobalLevel(level)
 
 	// btcd node connection
-	btcd := node.NewBtcdTcpClient(log, ctx, cfg.Node)
+	btcd := node.NewBtcdTcpClient(log, ctx, cfg.Node, cfg.Host)
 	btcdDispose, err := btcd.Connect()
 	if err != nil {
 		return

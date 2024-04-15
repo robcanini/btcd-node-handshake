@@ -12,6 +12,7 @@ func TestLoad(t *testing.T) {
 	// Define test configuration data
 	configData := `
 loglevel: debug
+host: local.com
 node:
   host: example.com
   port: 8080
@@ -41,6 +42,11 @@ handshake:
 	expectedLogLevel := "debug"
 	if c.Loglevel != expectedLogLevel {
 		t.Errorf("Expected loglevel %s, got %s", expectedLogLevel, c.Loglevel)
+	}
+
+	expectedHost := "local.com"
+	if c.Host != expectedHost {
+		t.Errorf("Expected host %s, got %s", expectedHost, c.Host)
 	}
 
 	expectedNodeHost := "example.com"
