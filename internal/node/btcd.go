@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -69,7 +68,6 @@ func (b *Btcd) readFromRemote(dataCh chan []byte, errorCh chan error) {
 			errorCh <- err
 			return
 		}
-		hdr.Command = message.Cmd(bytes.TrimRight(command[:], "\x00"))
 
 		payloadData := make([]byte, hdr.Length)
 		_, err = io.ReadFull(b.conn.tcpConn(), payloadData)
@@ -122,20 +120,6 @@ func (b *Btcd) handleReadData(errorCh chan error, data []byte) {
 		Header:  hdr,
 		Payload: payload,
 	})
-}
-
-func (b *Btcd) readMessageHeader(data []byte) (header message.MsgHeader, err error) {
-	headerBytes := data[:message.HeaderSize]
-	hr := bytes.NewReader(headerBytes)
-
-	header = message.MsgHeader{}
-	var command [message.CommandSize]byte
-
-	if err = readElements(hr, &header.Magic, &command, &header.Length, &header.Checksum); err != nil {
-		return
-	}
-	header.Command = message.Cmd(bytes.TrimRight(command[:], "\x00"))
-	return
 }
 
 func readElements(r io.Reader, elements ...interface{}) (err error) {
@@ -220,42 +204,6 @@ func (b *Btcd) onMessage(msg message.Message) {
 			Str("command", string(msg.Header.Command)).
 			Msg("unsupported command")
 	}
-}
-
-func toHexString(data []byte) (formatted string) {
-	str := hex.EncodeToString(data)
-	var buffer bytes.Buffer
-	buffer.WriteString("\nMessage header\n")
-	buffer.WriteString(str[0:8])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[8:32])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[32:40])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[40:48])
-	buffer.WriteString("\n")
-	buffer.WriteString("\nVersion message \n")
-	buffer.WriteString(str[48:56])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[56:72])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[72:88])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[88:140])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[140:192])
-	buffer.WriteString("\n")
-	buffer.WriteString(str[193:209])
-	buffer.WriteString("\n")
-	/*
-		buffer.WriteString(str[209:241])
-		buffer.WriteString("\n")
-		buffer.WriteString(str[241:250])
-		buffer.WriteString("\n")
-
-	*/
-	formatted = buffer.String()
-	return
 }
 
 func (b *Btcd) VerAck() (err error) {
