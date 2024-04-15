@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// NetAddress implements the addrv2 standard
 type NetAddress struct {
 	Timestamp time.Time
 	Services  uint64

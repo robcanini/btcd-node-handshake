@@ -1,0 +1,12 @@
+loglevel: debug
+node:
+  host: example.com
+  port: 8080
+  btcd:
+    agent: test-agent
+    p_version: 70015
+    relay_tx: true
+    services: 0
+    network: 0
+handshake:
+  timeout: 10s

@@ -2,7 +2,6 @@ loglevel: "debug"
 node:
   host: "127.0.0.1"
   port: 8333
-  conn_timeout: 60s
   btcd:
     network: 0xd9b4bef9 # mainnet
     agent: "/btcwire:0.5.0/"
@@ -11,6 +10,3 @@ node:
     services: 1
 handshake:
   timeout: 30s
-cache:
-  file:
-    store: .cache

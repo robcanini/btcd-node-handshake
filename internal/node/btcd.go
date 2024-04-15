@@ -5,14 +5,11 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
+	"github.com/robcanini/btcd-node-handshake/internal/config"
+	"github.com/robcanini/btcd-node-handshake/internal/message"
 	"io"
 	"net"
 	"sync"
-	"time"
-
-	"github.com/robcanini/btcd-node-handshake/internal/config"
-	"github.com/robcanini/btcd-node-handshake/internal/message"
 
 	"github.com/rs/zerolog"
 )
@@ -101,10 +98,6 @@ func (b *Btcd) listenInbound() {
 			}
 			b.log.Error().Err(err).Msg("error reading data")
 			return
-		// connection timeout
-		case <-time.After(b.cfg.ConnTimeout):
-			b.log.Error().Msg("connection timed out")
-			return
 		}
 	}
 }
@@ -140,10 +133,6 @@ func (b *Btcd) close() {
 		b.conn.dispose()
 		b.conn = nil
 	}
-}
-
-func (b *Btcd) IsConnected() bool {
-	return b.conn != nil
 }
 
 func (b *Btcd) StartHandshake(stopCh chan HandshakeCode) (err error) {
@@ -233,35 +222,6 @@ func (b *Btcd) versionAcknowledgeHandler(_ message.Message) {
 		return
 	}
 	b.closeHandshake(HDone)
-}
-
-func (b *Btcd) VerAck() (err error) {
-	response := make([]byte, 200)
-	_, err = b.conn.read(response)
-	if err != nil {
-		return
-	}
-
-	var version uint32
-	var services uint64
-	var timestamp uint32
-	var addrNodeToConnect [4]byte
-	var portNodeToConnect uint16
-
-	payload := bytes.NewReader(response)
-	_ = binary.Read(payload, binary.LittleEndian, &version)
-	_ = binary.Read(payload, binary.LittleEndian, &services)
-	_ = binary.Read(payload, binary.LittleEndian, &timestamp)
-	_ = binary.Read(payload, binary.LittleEndian, &addrNodeToConnect)
-	_ = binary.Read(payload, binary.BigEndian, &portNodeToConnect)
-
-	fmt.Printf("Versione: %d\n", version)
-	fmt.Printf("Servizi: %d\n", services)
-	fmt.Printf("Timestamp: %d\n", timestamp)
-	fmt.Printf("Indirizzo IP del nodo a cui ti stai connettendo: %s\n", net.IP(addrNodeToConnect[:]))
-	fmt.Printf("Porta del nodo a cui ti stai connettendo: %d\n", portNodeToConnect)
-
-	return
 }
 
 func (b *Btcd) closeHandshake(code HandshakeCode) {
