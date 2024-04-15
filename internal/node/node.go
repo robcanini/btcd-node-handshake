@@ -15,11 +15,9 @@ const (
 
 type Node interface {
 	Connect() (func(), error)
-	IsConnected() bool
-	SendVer(callback func(message.Message)) error
+	StartHandshake(stopCh chan HandshakeCode) (err error)
 	SendVerAck() error
 	onMessage(msg message.Message)
-	VerAck() error
 }
 
 type Network uint32

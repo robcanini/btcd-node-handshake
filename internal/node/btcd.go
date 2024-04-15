@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"github.com/robcanini/btcd-node-handshake/internal/config"
-	"github.com/robcanini/btcd-node-handshake/internal/message"
 	"io"
 	"net"
 	"sync"
+
+	"github.com/robcanini/btcd-node-handshake/internal/config"
+	"github.com/robcanini/btcd-node-handshake/internal/message"
 
 	"github.com/rs/zerolog"
 )
