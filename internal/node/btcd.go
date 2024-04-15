@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/robcanini/btcd-node-handshake/internal/config"
@@ -16,19 +17,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	MainNet  Network = 0xd9b4bef9
-	TestNet  Network = 0xdab5bffa
-	TestNet3 Network = 0x0709110b
-	SimNet   Network = 0x12141c16
-)
-
 type Btcd struct {
 	log zerolog.Logger
 	ctx context.Context
 	cfg config.Node
 
-	conn connection
+	conn   connection
+	stopCh chan HandshakeCode
+	stop   bool
+
+	paramsMux sync.Mutex
 }
 
 func NewBtcdTcpClient(log zerolog.Logger, ctx context.Context, config config.Node) *Btcd {
@@ -54,6 +52,7 @@ func (b *Btcd) Connect() (disposeFun func(), err error) {
 
 func (b *Btcd) readFromRemote(dataCh chan []byte, errorCh chan error) {
 	defer close(dataCh)
+	defer close(errorCh)
 	for {
 		headerData := make([]byte, message.HeaderSize)
 		_, err := b.conn.read(headerData)
@@ -75,6 +74,7 @@ func (b *Btcd) readFromRemote(dataCh chan []byte, errorCh chan error) {
 			errorCh <- err
 			return
 		}
+
 		messageData := append(headerData, payloadData...)
 		dataCh <- messageData
 	}
@@ -95,6 +95,10 @@ func (b *Btcd) listenInbound() {
 			b.handleReadData(errorCh, data)
 		// errors
 		case err := <-errorCh:
+			if b.stop {
+				// tcp channel has been closed
+				return
+			}
 			b.log.Error().Err(err).Msg("error reading data")
 			return
 		// connection timeout
@@ -132,15 +136,17 @@ func readElements(r io.Reader, elements ...interface{}) (err error) {
 }
 
 func (b *Btcd) close() {
-	b.conn.dispose()
-	b.conn = nil
+	if b.conn != nil {
+		b.conn.dispose()
+		b.conn = nil
+	}
 }
 
 func (b *Btcd) IsConnected() bool {
 	return b.conn != nil
 }
 
-func (b *Btcd) SendVer() (err error) {
+func (b *Btcd) StartHandshake(stopCh chan HandshakeCode) (err error) {
 	btcdCfg := b.cfg.Btcd
 	sourceAddr := message.NetAddress{
 		IP:   net.ParseIP("127.0.0.1").To4(),
@@ -151,7 +157,7 @@ func (b *Btcd) SendVer() (err error) {
 		Port: b.cfg.Port,
 	}
 	msg := message.NewMsgVersion(
-		uint32(MainNet),
+		b.cfg.Btcd.Network,
 		btcdCfg.ProtocolVersion,
 		uint64(btcdCfg.Services),
 		sourceAddr,
@@ -169,19 +175,22 @@ func (b *Btcd) SendVer() (err error) {
 	if err != nil {
 		return
 	}
+	b.stopCh = stopCh
 	return
 }
 
 func (b *Btcd) SendVerAck() (err error) {
 	msg := message.NewMsgVerAck(
-		uint32(MainNet),
+		b.cfg.Btcd.Network,
 	)
 	msgBytes, err := msg.ToBytes()
 	if err != nil {
+		b.closeHandshake(HError)
 		return
 	}
 	err = b.conn.write(msgBytes)
 	if err != nil {
+		b.closeHandshake(HError)
 		return
 	}
 	return
@@ -194,16 +203,36 @@ func (b *Btcd) onMessage(msg message.Message) {
 	}
 	switch msg.Header.Command {
 	case message.CmdVersion:
-		b.log.Info().Msg("version received")
+		b.updateNegotiationParams(msg)
 	case message.CmdSendAddrV2:
-		b.log.Info().Msg("sendaddrv2 received")
+		b.updateNegotiationParams(msg)
 	case message.CmdVersionAck:
-		b.log.Info().Msg("verack received")
+		b.versionAcknowledgeHandler(msg)
 	default:
 		b.log.Warn().
 			Str("command", string(msg.Header.Command)).
 			Msg("unsupported command")
 	}
+}
+
+func (b *Btcd) updateNegotiationParams(_ message.Message) {
+	b.paramsMux.Lock()
+	defer b.paramsMux.Unlock()
+	b.log.Info().
+		Msg("updating handshake negotiation params accordingly to node state")
+
+	// todo: we can safely update the negotiation client params accordingly to the btcd node
+}
+
+func (b *Btcd) versionAcknowledgeHandler(_ message.Message) {
+	b.log.Info().
+		Msg("received version ack from node. sending our ack")
+	err := b.SendVerAck()
+	if err != nil {
+		b.closeHandshake(HError)
+		return
+	}
+	b.closeHandshake(HDone)
 }
 
 func (b *Btcd) VerAck() (err error) {
@@ -233,4 +262,9 @@ func (b *Btcd) VerAck() (err error) {
 	fmt.Printf("Porta del nodo a cui ti stai connettendo: %d\n", portNodeToConnect)
 
 	return
+}
+
+func (b *Btcd) closeHandshake(code HandshakeCode) {
+	b.stop = true
+	b.stopCh <- code
 }

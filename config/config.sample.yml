@@ -4,7 +4,7 @@ node:
   port: 8333
   conn_timeout: 60s
   btcd:
-    network: "MainNet"
+    network: 0xd9b4bef9 # mainnet
     agent: "/btcwire:0.5.0/"
     p_version: "70016"
     relay_tx: true

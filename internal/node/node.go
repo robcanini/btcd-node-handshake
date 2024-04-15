@@ -1,14 +1,22 @@
 package node
 
 import (
-	"github.com/robcanini/btcd-node-handshake/internal/message"
 	"net"
+
+	"github.com/robcanini/btcd-node-handshake/internal/message"
+)
+
+type HandshakeCode int
+
+const (
+	HDone  HandshakeCode = 0
+	HError HandshakeCode = 1
 )
 
 type Node interface {
 	Connect() (func(), error)
 	IsConnected() bool
-	SendVer() error
+	SendVer(callback func(message.Message)) error
 	SendVerAck() error
 	onMessage(msg message.Message)
 	VerAck() error

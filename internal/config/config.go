@@ -25,7 +25,7 @@ type (
 		ProtocolVersion uint32 `mapstructure:"p_version"`
 		RelayTx         bool   `mapstructure:"relay_tx"`
 		Services        uint32 `mapstructure:"services"`
-		Network         string `mapstructure:"network"`
+		Network         uint32 `mapstructure:"network"`
 	}
 	Handshake struct {
 		Timeout time.Duration `mapstructure:"timeout"`

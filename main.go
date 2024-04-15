@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/robcanini/btcd-node-handshake/internal/config"
-	"github.com/robcanini/btcd-node-handshake/internal/handshake"
 	"github.com/robcanini/btcd-node-handshake/internal/node"
 
 	"github.com/rs/zerolog"
@@ -61,22 +61,42 @@ func main() {
 
 	// btcd node connection
 	btcd := node.NewBtcdTcpClient(log, ctx, cfg.Node)
-	dispose, err := btcd.Connect()
+	btcdDispose, err := btcd.Connect()
 	if err != nil {
 		return
 	}
-	defer dispose()
+	defer btcdDispose()
 
-	// handshake
-	hProgr := handshake.Run(log, btcd)
-	for event := range hProgr {
-		log.Info().Str("code", string(event)).Msg("h_event received")
-		if event == handshake.Error {
-			err = errors.New("handshake failed")
-			return
-		}
-		if event == handshake.Done {
-			log.Info().Msg("handshake successfully completed")
+	// init handshake sending version msg to btcd node
+	ch := make(chan node.HandshakeCode)
+	err = btcd.StartHandshake(ch)
+	if err != nil {
+		return
+	}
+
+	// wait for the handshake to be completed or timeout
+	hcode := waitForHandshake(ch, cfg, log)
+	if hcode == node.HDone {
+		log.Info().Msg("handshake completed")
+	} else {
+		log.Error().Int("code", int(hcode)).Msg("handshake failed")
+	}
+}
+
+const (
+	ExitError = 1
+)
+
+func waitForHandshake(ch chan node.HandshakeCode, cfg config.Config, log zerolog.Logger) node.HandshakeCode {
+	for {
+		select {
+		// code
+		case code := <-ch:
+			return code
+		// connection timeout
+		case <-time.After(cfg.Handshake.Timeout):
+			log.Error().Msg("timeout reached before handshake")
+			os.Exit(ExitError)
 		}
 	}
 }
