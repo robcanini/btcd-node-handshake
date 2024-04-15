@@ -15,9 +15,10 @@ type (
 		Handshake Handshake `mapstructure:"handshake"`
 	}
 	Node struct {
-		Host string `mapstructure:"host"`
-		Port uint16 `mapstructure:"port"`
-		Btcd Btcd   `mapstructure:"btcd"`
+		Host        string        `mapstructure:"host"`
+		Port        uint16        `mapstructure:"port"`
+		ConnTimeout time.Duration `mapstructure:"conn_timeout"`
+		Btcd        Btcd          `mapstructure:"btcd"`
 	}
 	Btcd struct {
 		Agent           string `mapstructure:"agent"`

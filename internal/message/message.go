@@ -10,34 +10,48 @@ import (
 type Cmd string
 
 const (
-	VersionCmd    Cmd = "version"
-	VersionAckCmd Cmd = "verack"
+	CmdVersion    Cmd = "version"
+	CmdVersionAck Cmd = "verack"
+	CmdSendAddrV2 Cmd = "sendaddrv2"
 )
 
-type MsgHeader struct {
-	magic    uint32 // 4 bytes
-	command  Cmd    // 12 bytes
-	length   uint32 // 4 bytes
-	checksum []byte // 4 bytes
-}
+const (
+	// HeaderSize is a fixed size of: Bitcoin network (Magic) 4 bytes + command 12 bytes + payload Length 4 bytes + Checksum 4 bytes.
+	HeaderSize = 24
+	// CommandSize is the fixed size of all commands in the common bitcoin message header.
+	CommandSize = 12
+)
+
+type (
+	Message struct {
+		Header  MsgHeader
+		Payload []byte
+	}
+	MsgHeader struct {
+		Magic    uint32 // 4 bytes
+		Command  Cmd    // 12 bytes
+		Length   uint32 // 4 bytes
+		Checksum []byte // 4 bytes
+	}
+)
 
 func newMsgHeader(magic uint32, command Cmd, length uint32, checksum []byte) MsgHeader {
 	return MsgHeader{
-		magic:    magic,
-		command:  command,
-		length:   length,
-		checksum: checksum,
+		Magic:    magic,
+		Command:  command,
+		Length:   length,
+		Checksum: checksum,
 	}
 }
 
 func (msg *MsgHeader) toBytes() (buf []byte) {
 	message := new(bytes.Buffer)
-	_ = binary.Write(message, binary.LittleEndian, msg.magic)
-	command := []byte(msg.command)
+	_ = binary.Write(message, binary.LittleEndian, msg.Magic)
+	command := []byte(msg.Command)
 	command = append(command, make([]byte, 12-len(command))...)
 	message.Write(command)
-	_ = binary.Write(message, binary.LittleEndian, msg.length)
-	message.Write(msg.checksum[0:4])
+	_ = binary.Write(message, binary.LittleEndian, msg.Length)
+	message.Write(msg.Checksum[0:4])
 	buf = message.Bytes()
 	return
 }

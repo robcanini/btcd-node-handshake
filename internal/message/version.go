@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// NetAddress implements the addrv2 standard
 type NetAddress struct {
 	Timestamp time.Time
 	Services  uint64
@@ -59,16 +60,6 @@ func NewMsgVersion(
 }
 
 func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
-	// todo: isolate each attr to serializable comp behaviour
-
-	sourceAddr := NetAddress{
-		IP:   net.ParseIP("127.0.0.1").To4(),
-		Port: 8443,
-	}
-	targetAddr := NetAddress{
-		IP:   net.ParseIP("127.0.0.1").To4(),
-		Port: 8443,
-	}
 	Timestamp := time.Unix(time.Now().Unix(), 0).Unix()
 	LastBlock := uint32(212672)
 
@@ -76,8 +67,8 @@ func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	_ = binary.Write(payload, binary.LittleEndian, msg.ProtocolVersion)
 	_ = binary.Write(payload, binary.LittleEndian, msg.Services)
 	_ = binary.Write(payload, binary.LittleEndian, uint64(Timestamp))
-	_ = binary.Write(payload, binary.LittleEndian, sourceAddr.ToBytes())
-	_ = binary.Write(payload, binary.LittleEndian, targetAddr.ToBytes())
+	_ = binary.Write(payload, binary.LittleEndian, msg.AddrMe.ToBytes())
+	_ = binary.Write(payload, binary.LittleEndian, msg.AddrYou.ToBytes())
 	_ = binary.Write(payload, binary.LittleEndian, randUint64())
 	_ = binary.Write(payload, binary.LittleEndian, uint8(len(msg.UserAgent)))
 	payload.Write([]byte(msg.UserAgent))
@@ -87,7 +78,7 @@ func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	message := new(bytes.Buffer)
 
 	// header
-	header := newMsgHeader(msg.Network, VersionCmd, uint32(payload.Len()), computeChecksum(payload.Bytes()))
+	header := newMsgHeader(msg.Network, CmdVersion, uint32(payload.Len()), computeChecksum(payload.Bytes()))
 	message.Write(header.toBytes())
 
 	// payload

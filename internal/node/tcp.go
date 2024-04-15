@@ -28,8 +28,8 @@ func (conn *tcpConnection) dispose() {
 	conn.log.Debug().Msg("tcp connection closed")
 }
 
-func (conn *tcpConnection) read(bytes []byte) (err error) {
-	_, err = conn.tcp.Read(bytes)
+func (conn *tcpConnection) read(bytes []byte) (len int, err error) {
+	len, err = conn.tcp.Read(bytes)
 	if err != nil {
 		return
 	}
@@ -42,4 +42,8 @@ func (conn *tcpConnection) write(bytes []byte) (err error) {
 		return
 	}
 	return
+}
+
+func (conn *tcpConnection) tcpConn() net.Conn {
+	return conn.tcp
 }

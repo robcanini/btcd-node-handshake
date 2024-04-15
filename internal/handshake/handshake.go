@@ -11,6 +11,7 @@ type HEvent string
 const (
 	Started HEvent = "H_STARTED"
 	Error   HEvent = "H_ERROR"
+	Ver     HEvent = "H_VER"
 	VerSent HEvent = "H_VERSION_SENT"
 	VerAck  HEvent = "H_VER_ACK"
 	Done    HEvent = "H_DONE"
@@ -39,7 +40,7 @@ func (h *Handshake) sendHEvent(event HEvent) {
 }
 
 func (h *Handshake) initHandshake() {
-	defer close(h.progress)
+	// defer close(h.progress)
 	n := h.node
 	if !n.IsConnected() {
 		h.log.Debug().Msg("node not connected, quitting handshake")
@@ -49,7 +50,7 @@ func (h *Handshake) initHandshake() {
 	h.sendHEvent(Started)
 	h.log.Debug().Msg("started handshake with the target node")
 
-	err := h.node.SendVersion()
+	err := h.node.SendVer()
 	if err != nil {
 		h.log.Error().Err(err).Msg("error sending version to the target node")
 		h.sendHEvent(Error)
