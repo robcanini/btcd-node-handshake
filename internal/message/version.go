@@ -60,7 +60,6 @@ func NewMsgVersion(
 
 func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	Timestamp := time.Unix(time.Now().Unix(), 0).Unix()
-	LastBlock := uint32(212672)
 
 	payload := new(bytes.Buffer)
 	_ = binary.Write(payload, binary.LittleEndian, msg.ProtocolVersion)
@@ -71,7 +70,7 @@ func (msg *MsgVersion) ToBytes() (buf []byte, err error) {
 	_ = binary.Write(payload, binary.LittleEndian, randUint64())
 	_ = binary.Write(payload, binary.LittleEndian, uint8(len(msg.UserAgent)))
 	payload.Write([]byte(msg.UserAgent))
-	_ = binary.Write(payload, binary.LittleEndian, LastBlock)
+	_ = binary.Write(payload, binary.LittleEndian, msg.LastBlock)
 	_ = binary.Write(payload, binary.LittleEndian, !msg.RelayTx) // protocol wants DisableRelayTx
 
 	message := new(bytes.Buffer)

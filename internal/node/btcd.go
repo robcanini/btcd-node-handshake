@@ -138,7 +138,7 @@ func (b *Btcd) close() {
 	}
 }
 
-func (b *Btcd) StartHandshake(stopCh chan HandshakeCode) (err error) {
+func (b *Btcd) StartHandshake(stopCh chan HandshakeCode, lastBlock uint64) (err error) {
 	btcdCfg := b.cfg.Btcd
 	sourceAddr := message.NetAddress{
 		IP:   net.ParseIP(b.host).To4(),
@@ -155,7 +155,7 @@ func (b *Btcd) StartHandshake(stopCh chan HandshakeCode) (err error) {
 		sourceAddr,
 		targetAddr,
 		btcdCfg.Agent,
-		212672,
+		int32(lastBlock),
 		!btcdCfg.RelayTx,
 	)
 

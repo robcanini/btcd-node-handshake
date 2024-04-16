@@ -15,7 +15,7 @@ const (
 
 type Node interface {
 	Connect() (func(), error)
-	StartHandshake(stopCh chan HandshakeCode) (err error)
+	StartHandshake(stopCh chan HandshakeCode, lastBlock uint64) (err error)
 	SendVerAck() error
 	onMessage(msg message.Message)
 }

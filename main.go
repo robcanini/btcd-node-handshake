@@ -34,10 +34,12 @@ func main() {
 	var (
 		configPath   string
 		printVersion bool
+		lastBlock    uint64
 	)
 
 	flag.StringVar(&configPath, "config", "config/config.yml", "config file path")
 	flag.BoolVar(&printVersion, "version", false, "print version")
+	flag.Uint64Var(&lastBlock, "last-block", 0, "the last block received by the emitting node")
 	flag.Parse()
 
 	if printVersion {
@@ -69,7 +71,7 @@ func main() {
 
 	// init handshake sending version msg to btcd node
 	ch := make(chan node.HandshakeCode)
-	err = btcd.StartHandshake(ch)
+	err = btcd.StartHandshake(ch, lastBlock)
 	if err != nil {
 		return
 	}
